@@ -65,13 +65,29 @@ func _GetPermissionString(file os.FileInfo) string {
 	return fmt.Sprintf("%s", file.Mode().String())
 }
 
+// ディレクトリの中にあるファイル数を返す
+func _GetLinkCount(path string) int {
+	f, err := os.Open(path)
+	if err != nil {
+		return 0
+	}
+
+	list, err := f.Readdir(-1)
+	f.Close()
+	if err != nil {
+		return 0
+	}
+
+	return len(list)
+}
+
 // 一行詳細表示をする
-func FormatPrintOneLine(file FileStruct) () {
+func FormatPrintOneLine(file FileStruct) {
 	var file_size int64
 	permission := _GetPermissionString(file.info)
 	file_size = file.info.Size()
-	owner := ""
-	group := ""
+	owner := "---"
+	group := "---"
 
 	// https://qiita.com/gorilla0513/items/ce0657e2e7de4f46ab2d
 	// こんなの知らないとかけないやーん
@@ -99,11 +115,14 @@ func FormatPrintOneLine(file FileStruct) () {
 
 	// ファイルの時は 1
 	link_count := 1
+	if file.info.IsDir() {
+		link_count = _GetLinkCount(file.path + "/" + file.info.Name())
+	}
 
 	file_time := file.info.ModTime()
 
 	fmt.Printf(
-		"%s %d %s %s %4d %s %s\n",
+		"%s %3d %s %s %4d %s %s\n",
 		permission,
 		link_count,
 		owner,
@@ -122,7 +141,7 @@ func FormatPrintOneLine(file FileStruct) () {
 }
 
 // ファイル名のみ表示させる
-func FormatPrintOnlyNames(file []FileStruct) () {
+func FormatPrintOnlyNames(file []FileStruct) {
 	// 最長ファイル名から右寄せで表示させる。
 	var root string = ""
 	longest_name := _GetlongestFileName(file)

@@ -13,7 +13,8 @@ import (
 
 var ALL_SHOW bool = true    // -a option
 var LISTING_OPT bool = true // -l option
-var DebugOpt bool = false    // -D option
+var DebugOpt bool = false   // -D option
+var REVERSE = false         // -r
 
 // TODO: -C
 // TODO: -F
@@ -26,9 +27,6 @@ var DebugOpt bool = false    // -D option
 // TODO: -t
 // TODO: -u
 // TODO: -1
-
-
-
 
 /**
  *
@@ -63,7 +61,7 @@ func getLookDirectory() (lookDirectory []string) {
 	return lsdir
 }
 
-func getFilesAtDirecotry(root string, walkFn filepath.WalkFunc) error {
+func getFilesAtDirectory(root string, walkFn filepath.WalkFunc) error {
 	f, err := os.Open(root)
 	if err != nil {
 		return err
@@ -77,7 +75,11 @@ func getFilesAtDirecotry(root string, walkFn filepath.WalkFunc) error {
 
 	// Sortable
 	sort.Slice(list, func(i, j int) bool {
-		return list[i].Name() < list[j].Name()
+		if REVERSE == false {
+			return list[i].Name() < list[j].Name()
+		}
+
+		return list[i].Name() > list[j].Name()
 	})
 
 	for f := 0; f < len(list); f++ {
@@ -98,7 +100,7 @@ func displayTheFiles(load_path string) error {
 	var files []gols.FileStruct
 
 	// 一覧取得
-	err := getFilesAtDirecotry(load_path, func(path string, info os.FileInfo, err error) error {
+	err := getFilesAtDirectory(load_path, func(path string, info os.FileInfo, err error) error {
 		lll := gols.NewFile(path, info)
 		files = append(files, *lll)
 		return nil
@@ -132,8 +134,11 @@ func init_runner() {
 
 	// -D オプション :: Debug
 	flag.BoolVar(&DebugOpt, "D", false, "Debug Option")
-	flag.Parse()
 
+	// -r Option
+	flag.BoolVar(&REVERSE, "r", false, "Reverse file list")
+
+	flag.Parse()
 
 	if DebugOpt == false {
 		// ログを黙らせる
