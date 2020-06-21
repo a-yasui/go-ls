@@ -15,6 +15,7 @@ var ALL_SHOW bool = true    // -a option
 var LISTING_OPT bool = true // -l option
 var DebugOpt bool = false   // -D option
 var REVERSE = false         // -r
+var ONELINE = false         // -1
 
 // TODO: -C
 // TODO: -F
@@ -23,10 +24,8 @@ var REVERSE = false         // -r
 // TODO: -d
 // TODO: -i
 // TODO: -q
-// TODO: -r
 // TODO: -t
 // TODO: -u
-// TODO: -1
 
 /**
  *
@@ -111,6 +110,11 @@ func displayTheFiles(load_path string) error {
 	}
 
 	// 表示をする
+	if ONELINE {
+		gols.OnelineDisplay(files)
+		return nil
+	}
+
 	if LISTING_OPT {
 		for i := 0; i < len(files); i++ {
 			gols.FormatPrintOneLine(files[i])
@@ -137,6 +141,8 @@ func init_runner() {
 
 	// -r Option
 	flag.BoolVar(&REVERSE, "r", false, "Reverse file list")
+
+	flag.BoolVar(&ONELINE, "1", false, "Oneline Display")
 
 	flag.Parse()
 

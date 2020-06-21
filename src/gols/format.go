@@ -185,3 +185,10 @@ func FormatPrintOnlyNames(file []FileStruct) {
 	fmt.Print(buff)
 	fmt.Print("\n")
 }
+
+// ファイル名のみ出力します
+func OnelineDisplay(file []FileStruct) {
+	for _, _file_ := range file {
+		fmt.Println(_file_.info.Name())
+	}
+}
