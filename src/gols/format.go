@@ -5,6 +5,7 @@ import (
 	terminal "github.com/wayneashleyberry/terminal-dimensions"
 	"log"
 	"os"
+	"os/user"
 	"strconv"
 	"syscall"
 )
@@ -47,22 +48,84 @@ func getWindowSize(fd int) *Size {
 	return &ws.Size
 }
 
+// 最も長いファイル名を取得する
+func _GetlongestFileName(file []FileStruct) string {
+	longest_name := ""
+
+	for _, _file_ := range file {
+		if len(longest_name) < len(_file_.info.Name()) {
+			longest_name = _file_.info.Name()
+		}
+	}
+	return longest_name
+}
+
+// ファイルパーミッションを文字列にして返す
+func _GetPermissionString(file os.FileInfo) string {
+	return fmt.Sprintf("%s", file.Mode().String())
+}
+
 // 一行詳細表示をする
 func FormatPrintOneLine(file FileStruct) () {
-	fmt.Println(file.info.Name())
+	var file_size int64
+	permission := _GetPermissionString(file.info)
+	file_size = file.info.Size()
+	owner := ""
+	group := ""
+
+	// https://qiita.com/gorilla0513/items/ce0657e2e7de4f46ab2d
+	// こんなの知らないとかけないやーん
+	if stat, ok := file.info.Sys().(*syscall.Stat_t); ok {
+		// syscall.Stat_t.UidがユーザIDになります
+		uid := strconv.Itoa(int(stat.Uid))
+		// os/userパッケージのLookupIdにUidを渡すとユーザ名を取得できます
+		u, err := user.LookupId(uid)
+		if err != nil {
+			owner = uid
+		} else {
+			owner = u.Username
+		}
+
+		// syscall.Stat_t.GidがグループIDになります
+		gid := strconv.Itoa(int(stat.Gid))
+		// os/userパッケージのLookupGroupIdにGidを渡すとグループ名を取得できます
+		g, err := user.LookupGroupId(gid)
+		if err != nil {
+			group = gid
+		} else {
+			group = g.Name
+		}
+	}
+
+	// ファイルの時は 1
+	link_count := 1
+
+	file_time := file.info.ModTime()
+
+	fmt.Printf(
+		"%s %d %s %s %4d %s %s\n",
+		permission,
+		link_count,
+		owner,
+		group,
+		file_size,
+		fmt.Sprintf("%d-%02d-%02d %02d:%02d:%02d",
+			file_time.Year(),
+			file_time.Month(),
+			file_time.Day(),
+			file_time.Hour(),
+			file_time.Minute(),
+			file_time.Second(),
+		),
+		file.info.Name(),
+	)
 }
 
 // ファイル名のみ表示させる
 func FormatPrintOnlyNames(file []FileStruct) () {
 	// 最長ファイル名から右寄せで表示させる。
-	var longest_name string = ""
 	var root string = ""
-	for _, _file_ := range file {
-		root = _file_.path
-		if len(longest_name) < len(_file_.info.Name()) {
-			longest_name = _file_.info.Name()
-		}
-	}
+	longest_name := _GetlongestFileName(file)
 
 	// 無いものは表示できぬ
 	if longest_name == "" {
