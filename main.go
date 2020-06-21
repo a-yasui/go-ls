@@ -11,9 +11,9 @@ import (
 	"sort"
 )
 
-var ALL_SHOW bool    // -a option
-var LISTING_OPT bool // -l option
-var DebugOpt bool    // -D option
+var ALL_SHOW bool = true    // -a option
+var LISTING_OPT bool = true // -l option
+var DebugOpt bool = false    // -D option
 
 // TODO: -C
 // TODO: -F
@@ -111,10 +111,10 @@ func displayTheFiles(load_path string) error {
 	// 表示をする
 	if LISTING_OPT {
 		for i := 0; i < len(files); i++ {
-			gols.FormatPrintOneLine(ALL_SHOW, files[i])
+			gols.FormatPrintOneLine(files[i])
 		}
 	} else {
-		gols.FormatPrintOnlyNames(ALL_SHOW, files)
+		gols.FormatPrintOnlyNames(files)
 	}
 
 	return nil
