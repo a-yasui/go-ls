@@ -3,6 +3,7 @@ package main
 import (
 	"./src/gols"
 	"flag"
+	"fmt"
 	"github.com/yookoala/realpath"
 	"io/ioutil"
 	"log"
@@ -16,6 +17,7 @@ var LISTING_OPT bool = true // -l option
 var DebugOpt bool = false   // -D option
 var REVERSE = false         // -r
 var ONELINE = false         // -1
+var DISPLAY_INODE = false   // -i
 
 // TODO: -C
 // TODO: -F
@@ -100,8 +102,14 @@ func displayTheFiles(load_path string) error {
 
 	// 一覧取得
 	err := getFilesAtDirectory(load_path, func(path string, info os.FileInfo, err error) error {
-		lll := gols.NewFile(path, info)
-		files = append(files, *lll)
+		NewFileData := gols.NewFile(path, info)
+
+		if DISPLAY_INODE {
+			inode := gols.GetINode(info)
+			NewFileData.Name = fmt.Sprintf("%s %s", inode, info.Name())
+		}
+
+		files = append(files, NewFileData)
 		return nil
 	})
 
@@ -143,6 +151,8 @@ func init_runner() {
 	flag.BoolVar(&REVERSE, "r", false, "Reverse file list")
 
 	flag.BoolVar(&ONELINE, "1", false, "Oneline Display")
+
+	flag.BoolVar(&DISPLAY_INODE, "i", false, "DisplayINode")
 
 	flag.Parse()
 

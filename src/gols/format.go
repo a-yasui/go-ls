@@ -25,14 +25,19 @@ type Window struct {
  */
 type FileStruct struct {
 	path string
+	Name string
 	info os.FileInfo
 	err  error
 }
 
 // 表示用に使うデータ構造
-func NewFile(path string, info os.FileInfo) *FileStruct {
-	result := FileStruct{path: path, info: info}
-	return &result
+func NewFile(path string, info os.FileInfo) FileStruct {
+	result := FileStruct{
+		path: path,
+		Name: info.Name(),
+		info: info,
+	}
+	return result
 }
 
 /**
@@ -53,8 +58,8 @@ func _GetlongestFileName(file []FileStruct) string {
 	longest_name := ""
 
 	for _, _file_ := range file {
-		if len(longest_name) < len(_file_.info.Name()) {
-			longest_name = _file_.info.Name()
+		if len(longest_name) < len(_file_.Name) {
+			longest_name = _file_.Name
 		}
 	}
 	return longest_name
@@ -79,6 +84,14 @@ func _GetLinkCount(path string) int {
 	}
 
 	return len(list)
+}
+
+// ファイルのINodeを取得する
+func GetINode(File os.FileInfo) string {
+	if stat, ok := File.Sys().(*syscall.Stat_t); ok {
+		return strconv.FormatUint(stat.Ino, 10)
+	}
+	return ""
 }
 
 // 一行詳細表示をする
@@ -116,10 +129,11 @@ func FormatPrintOneLine(file FileStruct) {
 	// ファイルの時は 1
 	link_count := 1
 	if file.info.IsDir() {
-		link_count = _GetLinkCount(file.path + "/" + file.info.Name())
+		link_count = _GetLinkCount(file.path + "/" + file.Name)
 	}
 
 	file_time := file.info.ModTime()
+	file_name := file.Name
 
 	fmt.Printf(
 		"%s %3d %s %s %4d %s %s\n",
@@ -136,7 +150,7 @@ func FormatPrintOneLine(file FileStruct) {
 			file_time.Minute(),
 			file_time.Second(),
 		),
-		file.info.Name(),
+		file_name,
 	)
 }
 
@@ -175,7 +189,7 @@ func FormatPrintOnlyNames(file []FileStruct) {
 			format = "%s"
 		}
 
-		buff += fmt.Sprintf(format, _file_.info.Name())
+		buff += fmt.Sprintf(format, _file_.Name)
 		if (i+1)%oneline_word == 0 {
 			buff += "\n"
 			log.Printf("[debug] oneline %d at i{%d}", (i+1)%oneline_word, i)
@@ -189,6 +203,6 @@ func FormatPrintOnlyNames(file []FileStruct) {
 // ファイル名のみ出力します
 func OnelineDisplay(file []FileStruct) {
 	for _, _file_ := range file {
-		fmt.Println(_file_.info.Name())
+		fmt.Println(_file_.Name)
 	}
 }
