@@ -8,6 +8,7 @@ import (
 	"os/user"
 	"strconv"
 	"syscall"
+	"time"
 )
 
 type Size struct {
@@ -94,6 +95,18 @@ func GetINode(File os.FileInfo) string {
 	return ""
 }
 
+//
+func dateTimeFormat(dateVal time.Time) string {
+	return fmt.Sprintf("%d-%02d-%02d %02d:%02d:%02d",
+		dateVal.Year(),
+		dateVal.Month(),
+		dateVal.Day(),
+		dateVal.Hour(),
+		dateVal.Minute(),
+		dateVal.Second(),
+	)
+}
+
 // 一行詳細表示をする
 func FormatPrintOneLine(file FileStruct) {
 	var file_size int64
@@ -127,30 +140,23 @@ func FormatPrintOneLine(file FileStruct) {
 	}
 
 	// ファイルの時は 1
-	link_count := 1
+	linkCount := 1
 	if file.info.IsDir() {
-		link_count = _GetLinkCount(file.path + "/" + file.Name)
+		linkCount = _GetLinkCount(file.path + "/" + file.Name)
 	}
 
-	file_time := file.info.ModTime()
-	file_name := file.Name
+	fileTime := file.info.ModTime()
+	fileName := file.Name
 
 	fmt.Printf(
 		"%s %3d %s %s %4d %s %s\n",
 		permission,
-		link_count,
+		linkCount,
 		owner,
 		group,
 		file_size,
-		fmt.Sprintf("%d-%02d-%02d %02d:%02d:%02d",
-			file_time.Year(),
-			file_time.Month(),
-			file_time.Day(),
-			file_time.Hour(),
-			file_time.Minute(),
-			file_time.Second(),
-		),
-		file_name,
+		dateTimeFormat(fileTime),
+		fileName,
 	)
 }
 
